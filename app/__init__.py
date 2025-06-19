@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from app.extensions import db, migrate
 from app.routes import register_routes
 from flask_login import LoginManager
+from flask_login import login_required
 
 login_manager = LoginManager()
 
@@ -24,6 +25,7 @@ def create_app():
     register_routes(app)
 
     @app.route('/')
+    @login_required
     def home():
         return render_template('dashboard.html')
 
