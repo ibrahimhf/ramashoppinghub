@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Customer ‑ {{ customer.name }}{% endblock %}
+{% block content %}
+<div class="container my-4">
+
+  <div class="d-flex justify-content-between align-items-center">
+    <h2>{{ customer.name }}</h2>
+    <a href="{{ url_for('customers.add_payment_form', id=customer.id) }}" class="btn btn-success">+ Add Payment</a>
+  </div>
+
+  <div class="row my-4">
+    <div class="col-md-6">
+      <h5>Contact Info</h5>
+      <p><strong>Phone:</strong> {{ customer.phone or "—" }}</p>
+      <p><strong>Address:</strong> {{ customer.address or "—" }}</p>
+    </div>
+    <div class="col-md-6">
+      <h5>Balances</h5>
+      <p><strong>Wallet:</strong> ${{ "%.2f"|format(customer.wallet_balance or 0) }}</p>
+      <p><strong>Total Outstanding:</strong> ${{ "%.2f"|format(customer.balance_due or 0) }}</p>
+    </div>
+  </div>
+
+  <hr>
+
+  <h4>Invoices</h4>
+  <div class="table-responsive mb-4">
+    <table class="table table-hover table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>#</th><th>Created</th><th>Due</th><th>Status</th>
+          <th>Total</th><th>Paid</th><th>Balance</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for inv in customer.invoices %}
+        <tr>
+          <td>{{ inv.id }}</td>
+          <td>{{ inv.date_created.strftime('%Y‑%m‑%d') }}</td>
+          <td>{{ inv.due_date.strftime('%Y‑%m‑%d') if inv.due_date else "—" }}</td>
+          <td><span class="badge bg-{{ 'success' if inv.status=='Paid' else (inv.status=='Partial' and 'warning' or 'secondary') }}">{{ inv.status }}</span></td>
+          <td>${{ "%.2f"|format(inv.total_amount) }}</td>
+          <td>${{ "%.2f"|format(inv.amount_paid) }}</td>
+          <td>${{ "%.2f"|format(inv.balance_due) }}</td>
+          <td><a href="{{ url_for('invoices.view_invoice', invoice_id=inv.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="text-center">No invoices found</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Payment History</h4>
+  <div class="table-responsive mb-4">
+    <table class="table table-striped">
+      <thead>
+        <tr><th>Date</th><th>Invoice</th><th>Amount</th><th>Method</th></tr>
+      </thead>
+      <tbody>
+      {% for pay in customer.payment_history %}
+        <tr>
+          <td>{{ pay.payment_date.strftime('%Y‑%m‑%d %H:%M') }}</td>
+          <td><a href="{{ url_for('invoices.view_invoice', invoice_id=pay.invoice.id) }}">{{ pay.invoice.id }}</a></td>
+          <td>${{ "%.2f"|format(pay.amount) }}</td>
+          <td>{{ pay.method }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4" class="text-center">No payments yet</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <a href="{{ url_for('customers.list_customers') }}" class="btn btn-secondary">Back</a>
+</div>
+{% endblock %}

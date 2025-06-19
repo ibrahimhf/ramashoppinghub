@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Invoice #{{ invoice.id }}{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Invoice #{{ invoice.id }}</h2>
+    <a href="{{ url_for('invoices.invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-outline-secondary">
+      Download PDF
+    </a>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Invoice Info</h5>
+        <p><strong>Order Number:</strong> {{ invoice.order_number or "—" }}</p>
+        <p><strong>Online Store:</strong> {{ invoice.store.name if invoice.store else "—" }}</p>
+        <p><strong>Status:</strong> {{ invoice.status }}</p>
+        <p><strong>Date Created:</strong> {{ invoice.date_created.strftime('%Y-%m-%d') }}</p>
+        <p><strong>Due Date:</strong> {{ invoice.due_date.strftime('%Y-%m-%d') if invoice.due_date else "—" }}</p>
+    </div>
+</div>
+
+  <h5>Items</h5>
+<table class="table table-sm table-bordered mb-4">
+  <thead class="table-light">
+    <tr>
+      <th>#</th>
+      <th>Number of Items</th>
+      <th>Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for it in invoice.items %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ it.number_of_items }}</td>
+      <td>${{ "%.2f"|format(it.amount) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+  <h5>Payments</h5>
+  <table class="table table-sm table-striped mb-4">
+    <thead><tr><th>Date</th><th>Amount</th><th>Method</th></tr></thead>
+    <tbody>
+      {% for pay in invoice.payments %}
+<tr>
+  <td>{{ pay.payment_date.strftime('%Y-%m-%d %H:%M') if pay.payment_date else 'N/A' }}</td>
+  <td>${{ "%.2f"|format(pay.amount) }}</td>
+  <td>{{ pay.method }}</td>
+</tr>
+{% else %}
+<tr><td colspan="3" class="text-center">No payments recorded.</td></tr>
+{% endfor %}
+    </tbody>
+  </table>
+
+  <div class="card my-4 p-3">
+    <h5>Add Payment</h5>
+    <form method="POST">
+      {{ payment_form.hidden_tag() }}
+      <div class="row gy-2 gx-3 align-items-center">
+        <div class="col-md-3">
+          {{ payment_form.amount(class="form‑control", placeholder="Amount") }}
+        </div>
+        <div class="col-md-3">
+          {{ payment_form.method(class="form‑select") }}
+        </div>
+        <div class="col-md-auto">
+          {{ payment_form.submit(class="btn btn-success") }}
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <a href="{{ url_for('invoices.index') }}" class="btn btn-secondary">Back to Invoices</a>
+</div>
+{% endblock %}

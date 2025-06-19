@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Add Customer{% endblock %}
+{% block content %}
+<h2>Add New Customer</h2>
+<form method="POST">
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-control" name="name" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <input type="text" class="form-control" name="phone">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Address</label>
+        <textarea class="form-control" name="address" rows="2" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{{ url_for('customers.list_customers') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

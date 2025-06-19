@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Online Stores</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control") }}
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+
+    <hr>
+    <h4>Stores List</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Store Name</th>
+                <th>Number of Invoices</th>
+                <th>Total Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for store in store_data %}
+            <tr>
+                <td>{{ store.name }}</td>
+                <td>{{ store.invoice_count }}</td>
+                <td>${{ "%.2f"|format(store.total_amount) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

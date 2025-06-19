@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Add Payment{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Add Payment</h2>
+  <form id="paymentForm" method="POST" action="{{ url_for('payments.add_payment') }}">
+    <div class="mb-3">
+      <label for="customer_id" class="form-label">Select Customer</label>
+      <select class="form-select" id="customer_id" name="customer_id" required>
+        <option value="" disabled selected>Select a customer</option>
+        {% for customer in customers %}
+          <option value="{{ customer.id }}">{{ customer.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="payment_type" class="form-label">Payment Type</label>
+      <select class="form-select" id="payment_type" name="payment_type" required>
+        <option value="invoice" selected>Invoice Payment</option>
+        <option value="wallet">Wallet Top-Up</option>
+      </select>
+    </div>
+
+    <div id="invoice-section" class="mb-3">
+      <label for="invoice_id" class="form-label">Select Invoice</label>
+      <select class="form-select" id="invoice_id" name="invoice_id">
+        <option value="" disabled selected>Select unpaid invoice</option>
+        <!-- Initially empty, will be populated dynamically -->
+      </select>
+
+      <div class="form-check mt-2">
+        <input class="form-check-input" type="checkbox" id="use_wallet" name="use_wallet" value="true" disabled>
+        <label class="form-check-label" for="use_wallet">Use Wallet Balance</label>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="amount" class="form-label">Payment Amount</label>
+      <input type="number" step="0.01" min="0" class="form-control" id="amount" name="amount" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="method" class="form-label">Payment Method</label>
+      <select class="form-select" id="method" name="method" required>
+        <option value="Cash">Cash</option>
+        <option value="OMT">OMT</option>
+        <option value="Whish Money">Whish Money</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-success">Submit Payment</button>
+    <a href="{{ url_for('payments.list_payments') }}" class="btn btn-secondary">Back</a>
+  </form>
+  <div id="paymentMessage" class="mt-3"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const paymentType = document.getElementById('payment_type');
+  const invoiceSection = document.getElementById('invoice-section');
+  const customerSelect = document.getElementById('customer_id');
+  const invoiceSelect = document.getElementById('invoice_id');
+  const useWalletCheckbox = document.getElementById('use_wallet');
+
+  function toggleInvoiceSection() {
+    if (paymentType.value === 'invoice') {
+      invoiceSection.style.display = 'block';
+    } else {
+      invoiceSection.style.display = 'none';
+    }
+  }
+
+  function updateWalletCheckbox() {
+    // For demo, disable wallet checkbox
+    useWalletCheckbox.checked = false;
+    useWalletCheckbox.disabled = true;
+  }
+
+  async function fetchUnpaidInvoices(customerId) {
+    if (!customerId) {
+      invoiceSelect.innerHTML = '<option value="" disabled selected>Select unpaid invoice</option>';
+      useWalletCheckbox.checked = false;
+      useWalletCheckbox.disabled = true;
+      return;
+    }
+
+    try {
+      const response = await fetch(`/payments/api/unpaid_invoices/${customerId}`);
+      if (!response.ok) throw new Error('Failed to fetch invoices');
+      const invoices = await response.json();
+
+      invoiceSelect.innerHTML = '';
+
+      if (invoices.length === 0) {
+        invoiceSelect.innerHTML = '<option value="" disabled selected>No unpaid invoices</option>';
+        useWalletCheckbox.checked = false;
+        useWalletCheckbox.disabled = true;
+      } else {
+        invoiceSelect.innerHTML = '<option value="" disabled selected>Select unpaid invoice</option>';
+        invoices.forEach(inv => {
+          const option = document.createElement('option');
+          option.value = inv.id;
+          option.textContent = inv.display;
+          invoiceSelect.appendChild(option);
+        });
+        useWalletCheckbox.checked = false;
+        useWalletCheckbox.disabled = true;  // adjust if needed
+      }
+    } catch (err) {
+      console.error('Error loading unpaid invoices:', err);
+      invoiceSelect.innerHTML = '<option value="" disabled selected>Error loading invoices</option>';
+      useWalletCheckbox.checked = false;
+      useWalletCheckbox.disabled = true;
+    }
+  }
+
+  customerSelect.addEventListener('change', () => {
+    fetchUnpaidInvoices(customerSelect.value);
+    updateWalletCheckbox();
+  });
+
+  paymentType.addEventListener('change', toggleInvoiceSection);
+
+  // On page load
+  toggleInvoiceSection();
+  updateWalletCheckbox();
+
+  // Optionally fetch unpaid invoices if customer is preselected
+  if (customerSelect.value) {
+    fetchUnpaidInvoices(customerSelect.value);
+  }
+
+  // AJAX form submit
+  document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+
+    const response = await fetch(form.action, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+    const msgDiv = document.getElementById('paymentMessage');
+    msgDiv.innerHTML = `<div class="alert alert-${data.success ? 'success' : 'danger'}">${data.message || data.error}</div>`;
+    if (data.success) form.reset();
+  });
+});
+</script>
+{% endblock %}

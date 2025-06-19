@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Bank Report{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4 text-primary">Bank Report</h2>
+
+  <!-- Filters -->
+  <form method="GET" class="row g-2 mb-4">
+    <div class="col-md-3">
+      <input type="text" class="form-control" name="q" placeholder="Search..." value="{{ q }}">
+    </div>
+    <div class="col-md-3">
+      <input type="date" class="form-control" name="start_date" value="{{ start_date }}">
+    </div>
+    <div class="col-md-3">
+      <input type="date" class="form-control" name="end_date" value="{{ end_date }}">
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+  </form>
+
+  <!-- Summary Cards -->
+  <div class="row mb-5">
+    <div class="col-md-4">
+      <div class="card border-success shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title text-muted">Total Payments</h6>
+          <h4 class="text-success">${{ '%.2f' | format(total_payments) }}</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-danger shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title text-muted">Total Expenses</h6>
+          <h4 class="text-danger">${{ '%.2f' | format(total_expenses) }}</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-primary shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title text-muted">Net Total</h6>
+          <h4 class="text-primary">
+            ${{ '%.2f' | format(total_payments - total_expenses) }}
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payments Section -->
+  <h4 class="text-dark">Payments</h4>
+  <table class="table table-bordered table-hover table-striped mb-5">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Customer</th>
+        <th>Method</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for payment in payments %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ payment.customer.name if payment.customer else '—' }}</td>
+        <td>{{ payment.method }}</td>
+        <td>{{ payment.payment_type.capitalize() }}</td>
+        <td class="text-success">${{ '%.2f'|format(payment.amount) }}</td>
+        <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6" class="text-center text-muted">No payments found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Expenses Section -->
+  <h4 class="text-dark">Expenses</h4>
+  <table class="table table-bordered table-hover table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Description</th>
+        <th>Category</th>
+        <th>Amount</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for expense in expenses %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ expense.description }}</td>
+        <td>{{ expense.category.name if expense.category else '—' }}</td>
+        <td class="text-danger">${{ '%.2f'|format(expense.amount) }}</td>
+        <td>{{ expense.date.strftime('%Y-%m-%d') }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" class="text-center text-muted">No expenses found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
